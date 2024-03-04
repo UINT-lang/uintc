@@ -1,0 +1,10 @@
+fn print() {
+    cpp("""
+        std::cout << "Hello from UINT!" << std::endl;
+    """)
+}
+
+fn main() {
+    print();
+    print();
+}

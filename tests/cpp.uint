@@ -1,0 +1,6 @@
+cpp("""
+using namespace std;
+int main() {
+    cout << "Hello from UINT!" << endl;
+}
+""")
