@@ -1,17 +1,18 @@
 %{
-#include <bits/stdc++.h>
 #include "scanner.hpp"
+#include <bits/stdc++.h>
 using namespace std;
 %}
  
 %require "3.7.4"
 %language "C++"
- 
+
 %define api.parser.class {Parser}
 %define api.namespace {UINTC}
 %define api.value.type variant
+%define parse.error verbose
 %param {yyscan_t scanner}
- 
+
 %code provides
 {
     #define YY_DECL \
@@ -145,7 +146,10 @@ string      : INLINE_STRING
             ;
  
 %%
- 
+
+namespace UINTC {
+    extern int currentLineNumber;
+}
 void UINTC::Parser::error(const string& msg) {
-    cerr << msg << endl;
+    cerr << "Line " << currentLineNumber << ": " << msg << endl;
 }

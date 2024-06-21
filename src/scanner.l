@@ -1,11 +1,14 @@
 %{
-#include <bits/stdc++.h>
 #include "parser.hpp"
+#include <bits/stdc++.h>
 using namespace std;
 using namespace UINTC;
+namespace UINTC {
+    int currentLineNumber = 1;
+}
 %}
 
-%option reentrant interactive noyywrap noyylineno nodefault
+%option reentrant interactive noyywrap nodefault
 
 inline_string    (["]([^"])*["])
 multiline_string (\"\"\"([^"]|\"[^"]|\"\"[^"])*\"\"\")
@@ -20,7 +23,7 @@ identifier       ([a-zA-Z_][a-zA-Z0-9_]*)
 "}"     return Parser::token::RBRACE;
 
 " "     ;
-\n      ;
+\n      UINTC::currentLineNumber++;
 
 "cpp"   return Parser::token::CPP;
 "fn"    return Parser::token::FN;
