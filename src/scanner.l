@@ -62,6 +62,9 @@ f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 "/"     return Parser::token::SLASH;
 "+="    return Parser::token::PLUS_EQUAL;
 "%"     return Parser::token::MOD;
+"&&"    return Parser::token::LOGICAL_AND;
+">="    return Parser::token::GREATER_EQUAL;
+"<="    return Parser::token::LESS_EQUAL;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 

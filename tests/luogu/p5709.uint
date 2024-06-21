@@ -1,0 +1,6 @@
+fn main() {
+    let m = stdin.read<Int32>();
+    let t = stdin.read<Int32>();
+    let s = stdin.read<Int32>();
+    stdout << (t ? max(0i32, m - (s + t - 1i32) / t) : 0i32) << '\n';
+}

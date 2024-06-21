@@ -20,7 +20,7 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL
 %token CPP FN LET FOR REF LET_MUT WHILE
 %token CHAR_LITERAL_NEWLINE
 
@@ -54,6 +54,8 @@ using namespace std;
 %type <std::string> expression
 %type <std::string> expression16
 %type <std::string> expression15
+%type <std::string> expression14
+%type <std::string> expression13
 %type <std::string> expression10
 %type <std::string> expression9
 %type <std::string> expression8
@@ -266,6 +268,24 @@ expression16
     ;
 
 expression15
+    : expression14
+    {
+        $$ = $1;
+    }
+    ;
+
+expression14
+    : expression14 LOGICAL_AND expression13
+    {
+        $$ = "(" + $1 + " && " + $3 + ")";
+    }
+    | expression13
+    {
+        $$ = $1;
+    }
+    ;
+
+expression13
     : expression10
     {
         $$ = $1;
@@ -286,6 +306,18 @@ expression9
     : expression9 LESS_THAN expression8
     {
         $$ = "(" + $1 + " < " + $3 + ")";
+    }
+    | expression9 GREATER_THAN expression8
+    {
+        $$ = "(" + $1 + " > " + $3 + ")";
+    }
+    | expression9 GREATER_EQUAL expression8
+    {
+        $$ = "(" + $1 + " >= " + $3 + ")";
+    }
+    | expression9 LESS_EQUAL expression8
+    {
+        $$ = "(" + $1 + " <= " + $3 + ")";
     }
     | expression8
     {
@@ -406,7 +438,7 @@ maybe_templated_function_name
     {
         $$ = $1;
     }
-    | IDENTIFIER LESS_THAN expression GREATER_THAN
+    | IDENTIFIER LESS_THAN IDENTIFIER GREATER_THAN
     {
         $$ = $1 + "<" + $3 + ">";
     }

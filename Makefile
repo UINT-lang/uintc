@@ -15,4 +15,4 @@ build/scanner.cpp build/scanner.hpp: src/scanner.l Makefile
 	flex -o build/scanner.cpp --header-file=build/scanner.hpp src/scanner.l
 
 build/parser.cpp build/parser.hpp: src/parser.y Makefile
-	bison -d -Wcounterexamples -o build/parser.cpp src/parser.y
+	TIME_LIMIT=20 bison -d -Wcounterexamples -o build/parser.cpp src/parser.y
