@@ -6,6 +6,18 @@ using namespace UINTC;
 namespace UINTC {
     int currentLineNumber = 1;
     string globalResult;
+    string parseInlineStringLiteral(const string& s) {
+        assert(s.size() >= 2);
+        assert(s.front() == '"');
+        assert(s.back() == '"');
+        return s.substr(1, s.size() - 2);
+    }
+    string parseMultilineStringLiteral(const string& s) {
+        assert(s.size() >= 7);
+        assert(s.substr(0, 4) == "\"\"\"\n");
+        assert(s.substr(s.size() - 3, 3) == "\"\"\"");
+        return s.substr(4, s.size() - 7);
+    }
     int32_t parseInt32(const string& s) {
         int32_t ret = stoi(s.substr(0, s.size() - 3));
         if (s != to_string(ret) + "i32") {
@@ -20,7 +32,7 @@ namespace UINTC {
 %option reentrant interactive noyywrap nodefault
 
 inline_string_literal    (["]([^"])*["])
-multiline_string_literal (\"\"\"([^"]|\"[^"]|\"\"[^"])*\"\"\")
+multiline_string_literal (\"\"\"\n([^"]|\"[^"]|\"\"[^"])*\"\"\")
 
 identifier       ([a-zA-Z_][a-zA-Z0-9_]*)
 
@@ -40,6 +52,8 @@ i32_literal      ([0-9]+)i32
 "<"     return Parser::token::LESS_THAN;
 ">"     return Parser::token::GREATER_THAN;
 
+"'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
+
 " "     ;
 \n      UINTC::currentLineNumber++;
 
@@ -47,8 +61,8 @@ i32_literal      ([0-9]+)i32
 "fn"    return Parser::token::FN;
 "let"   return Parser::token::LET;
 
-{inline_string_literal}    yylval->emplace<string>(yytext); return Parser::token::INLINE_STRING_LITERAL;
-{multiline_string_literal} yylval->emplace<string>(yytext); return Parser::token::MULTILINE_STRING_LITERAL;
+{inline_string_literal}    yylval->emplace<string>(parseInlineStringLiteral(yytext)); return Parser::token::INLINE_STRING_LITERAL;
+{multiline_string_literal} yylval->emplace<string>(parseMultilineStringLiteral(yytext)); return Parser::token::MULTILINE_STRING_LITERAL;
 {identifier}       yylval->emplace<string>(yytext); return Parser::token::IDENTIFIER;
 {i32_literal}      yylval->emplace<int32_t>(UINTC::parseInt32(yytext)); return Parser::token::I32_LITERAL;
 

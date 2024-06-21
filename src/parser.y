@@ -22,6 +22,7 @@ using namespace std;
  
 %token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUALS LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN
 %token CPP FN LET
+%token CHAR_LITERAL_NEWLINE
 
 %precedence LPAREN
 %left LEFT_SHIFT
@@ -32,6 +33,8 @@ using namespace std;
 %token <std::string> MULTILINE_STRING_LITERAL
 %token <std::string> IDENTIFIER
 %token <int32_t> I32_LITERAL
+
+%type <char> char_literal
 
 %type <std::string> string_literal
 %type <std::string> cpp_statement
@@ -173,6 +176,12 @@ expression
     {
         $$ = to_string($1) + "_i32";
     }
+    | char_literal
+    {
+        stringstream stream;
+        stream << "'\\x" << std::setfill('0') << std::setw(2) << std::hex << (int) (unsigned char) $1 << "'";
+        $$ = stream.str();
+    }
     | IDENTIFIER
     {
         $$ = $1;
@@ -193,19 +202,19 @@ maybe_templated_function_name
 string_literal
     : INLINE_STRING_LITERAL
     {
-        assert($1.size() >= 2);
-        assert($1.front() == '"');
-        assert($1.back() == '"');
-        $$ = $1.substr(1, $1.size() - 2);
+        $$ = $1;
     }
     | MULTILINE_STRING_LITERAL
     {
-        assert($1.size() >= 6);
-        assert($1.substr(0, 3) == "\"\"\"");
-        assert($1.substr($1.size() - 3, 3) == "\"\"\"");
-        $$ = $1.substr(3, $1.size() - 6);
+        $$ = $1;
     }
     ;
+
+char_literal
+    : CHAR_LITERAL_NEWLINE
+    {
+        $$ = '\n';
+    }
 
 %%
 
