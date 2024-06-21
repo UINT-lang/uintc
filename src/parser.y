@@ -28,12 +28,12 @@ using namespace std;
 %left PLUS
 %left DOT
 
-%token <std::string> INLINE_STRING
-%token <std::string> MULTILINE_STRING
+%token <std::string> INLINE_STRING_LITERAL
+%token <std::string> MULTILINE_STRING_LITERAL
 %token <std::string> IDENTIFIER
 %token <int32_t> I32_LITERAL
 
-%type <std::string> string
+%type <std::string> string_literal
 %type <std::string> cpp_statement
 %type <std::string> fn_declaration
 %type <std::string> statements
@@ -47,24 +47,18 @@ using namespace std;
 
 %code
 {
-    namespace UINTC {
-        bool hasMain = false;
-    }  // namespace UINTC
+namespace UINTC {
+    extern string globalResult;
+}  // namespace UINTC
 }  // %code
  
 %%
 
-root        : top_levels
-            {
-                cout << "#include \"uintcpplib.hpp\"\n";
-                cout << $1;
-                if (UINTC::hasMain) {
-                    cout << "int main() {\n";
-                    cout << "    UINT::main();\n";
-                    cout << "}\n";
-                }
-            }
-            ;
+root : top_levels
+    {
+        UINTC::globalResult = $1;
+    }
+    ;
 
 top_levels  : %empty
             {
@@ -86,25 +80,22 @@ top_level   : cpp_statement
             }
             ;
 
-cpp_statement   : CPP LPAREN string RPAREN
-                {
-                    $$ = $3 + "\n";
-                }
-                ;
+cpp_statement
+    : CPP LPAREN string_literal RPAREN
+    {
+        $$ = $3 + "\n";
+    }
+    ;
 
 fn_declaration  : FN IDENTIFIER LPAREN RPAREN LBRACE statements RBRACE
                 {
                     stringstream ss;
                     ss << "namespace UINT {\n";
-                    ss << "    auto " << $2 << "() {\n";
+                    ss << "auto " << $2 << "() {\n";
                     ss << $6;
-                    ss << "    }\n";
+                    ss << "}\n";
                     ss << "}\n";
                     $$ = ss.str();
-
-                    if ($2 == "main") {
-                        UINTC::hasMain = true;
-                    }
                 }
                 ;
 
@@ -128,7 +119,7 @@ statement   : SEMICOLON
             }
             | expression SEMICOLON
             {
-                $$ = "    " + $1 + ";\n";
+                $$ = "" + $1 + ";\n";
             }
             | variable_declaration
             {
@@ -139,7 +130,7 @@ statement   : SEMICOLON
 call_expression
     : expression LPAREN RPAREN
     {
-        $$ = "    " + $1 + "()";
+        $$ = "" + $1 + "()";
     }
     | expression DOT maybe_templated_function_name LPAREN RPAREN
     {
@@ -150,7 +141,7 @@ call_expression
 variable_declaration
     : LET IDENTIFIER EQUALS expression SEMICOLON
     {
-        $$ = "    const auto&& " + $2 + " = " + $4 + ";\n";
+        $$ = "const auto&& " + $2 + " = " + $4 + ";\n";
     }
     ;
 
@@ -167,9 +158,16 @@ expression
     {
         $$ = $1;
     }
-    | INLINE_STRING
+    | string_literal
     {
-        $$ = $1;
+        $$ = "\"";
+        for (char c : $1) {
+            if (c == '\n')
+                $$ += "\\n";
+            else
+                $$ += c;
+        }
+        $$ += "\"";
     }
     | I32_LITERAL
     {
@@ -192,21 +190,22 @@ maybe_templated_function_name
     }
     ;
 
-string      : INLINE_STRING
-            {
-                assert($1.size() >= 2);
-                assert($1.front() == '"');
-                assert($1.back() == '"');
-                $$ = $1.substr(1, $1.size() - 2);
-            }
-            | MULTILINE_STRING
-            {
-                assert($1.size() >= 6);
-                assert($1.substr(0, 3) == "\"\"\"");
-                assert($1.substr($1.size() - 3, 3) == "\"\"\"");
-                $$ = $1.substr(3, $1.size() - 6);
-            }
-            ;
+string_literal
+    : INLINE_STRING_LITERAL
+    {
+        assert($1.size() >= 2);
+        assert($1.front() == '"');
+        assert($1.back() == '"');
+        $$ = $1.substr(1, $1.size() - 2);
+    }
+    | MULTILINE_STRING_LITERAL
+    {
+        assert($1.size() >= 6);
+        assert($1.substr(0, 3) == "\"\"\"");
+        assert($1.substr($1.size() - 3, 3) == "\"\"\"");
+        $$ = $1.substr(3, $1.size() - 6);
+    }
+    ;
 
 %%
 

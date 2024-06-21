@@ -2,3 +2,4 @@ build/uintc
 build/*.cpp
 build/*.hpp
 *.exe
+tmp.*
