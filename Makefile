@@ -3,7 +3,10 @@ all: build/uintc
 clean:
 	rm -f build/uintc build/*.cpp build/*.hpp
 
-.PHONY: all clean
+test:
+	tests/run.sh
+
+.PHONY: all clean test
 
 build/uintc: build/scanner.cpp build/scanner.hpp build/parser.cpp build/parser.hpp Makefile
 	g++ -O2 -Ibuild -o build/uintc build/scanner.cpp build/parser.cpp

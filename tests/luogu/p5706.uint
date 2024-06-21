@@ -1,0 +1,6 @@
+fn main() {
+    let t = stdin.read<Double>();
+    let n = stdin.read<Int32>();
+    stdout << fixed << setprecision(3i32) << t / n << '\n';
+    stdout << n * 2i32 << '\n';
+}

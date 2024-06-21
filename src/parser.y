@@ -20,8 +20,8 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS
-%token CPP FN LET FOR REF MUT
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH
+%token CPP FN LET FOR REF LET_MUT
 %token CHAR_LITERAL_NEWLINE
 
 %left EQUALS
@@ -211,9 +211,9 @@ variable_declaration_left
     {
         $$ = "const auto&& " + $2;
     }
-    | LET MUT IDENTIFIER
+    | LET_MUT IDENTIFIER
     {
-        $$ = "LetMutable auto&& " + $3;
+        $$ = "LetMutable auto&& " + $2;
     }
     | REF IDENTIFIER
     {
@@ -300,6 +300,10 @@ expression5
     : expression5 STAR expression4
     {
         $$ = "(" + $1 + " * " + $3 + ")";
+    }
+    | expression5 SLASH expression4
+    {
+        $$ = "(" + $1 + " / " + $3 + ")";
     }
     | expression4
     {

@@ -10,6 +10,7 @@ static int32_t operator""_i32(unsigned long long x) {
 using Int32 = int32_t;
 using Char = char;
 using String = string;
+using Double = double;
 
 struct StdIn {
     template <typename T>

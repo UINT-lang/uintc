@@ -58,6 +58,7 @@ i32_literal      ([0-9]+)i32
 "?"     return Parser::token::QUESTION_MARK;
 "*"     return Parser::token::STAR;
 ","     return Parser::token::COMMA;
+"/"     return Parser::token::SLASH;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 
@@ -67,7 +68,7 @@ i32_literal      ([0-9]+)i32
 "cpp"   return Parser::token::CPP;
 "fn"    return Parser::token::FN;
 "let"   return Parser::token::LET;
-"mut"   return Parser::token::MUT;
+"let!"  return Parser::token::LET_MUT;
 "for"   return Parser::token::FOR;
 "ref"   return Parser::token::REF;
 
