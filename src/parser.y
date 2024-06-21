@@ -20,8 +20,8 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK
-%token CPP FN LET FOR REF
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS
+%token CPP FN LET FOR REF MUT
 %token CHAR_LITERAL_NEWLINE
 
 %left EQUALS
@@ -58,7 +58,9 @@ using namespace std;
 %type <std::string> expression7
 %type <std::string> expression6
 %type <std::string> expression5
+%type <std::string> expression4
 %type <std::string> expression2
+%type <std::string> call_parameters
 %type <std::string> maybe_templated_function_name
 %type <std::string> for_statement
 
@@ -71,31 +73,34 @@ namespace UINTC {
  
 %%
 
-root : top_levels
+root
+    : top_levels
     {
         UINTC::globalResult = $1;
     }
     ;
 
-top_levels  : %empty
-            {
-                $$ = "";
-            }
-            | top_levels top_level
-            {
-                $$ = $1 + $2;
-            }
-            ;
+top_levels
+    : %empty
+    {
+        $$ = "";
+    }
+    | top_levels top_level
+    {
+        $$ = $1 + $2;
+    }
+    ;
 
-top_level   : cpp_statement
-            {
-                $$ = $1;
-            }
-            | fn_declaration
-            {
-                $$ = $1;
-            }
-            ;
+top_level
+    : cpp_statement
+    {
+        $$ = $1;
+    }
+    | fn_declaration
+    {
+        $$ = $1;
+    }
+    ;
 
 cpp_statement
     : CPP LPAREN string_literal RPAREN
@@ -104,17 +109,18 @@ cpp_statement
     }
     ;
 
-fn_declaration  : FN IDENTIFIER LPAREN RPAREN LBRACE statements RBRACE
-                {
-                    stringstream ss;
-                    ss << "namespace UINT {\n";
-                    ss << "auto " << $2 << "() {\n";
-                    ss << $6;
-                    ss << "}\n";
-                    ss << "}\n";
-                    $$ = ss.str();
-                }
-                ;
+fn_declaration
+    : FN IDENTIFIER LPAREN RPAREN LBRACE statements RBRACE
+    {
+        stringstream ss;
+        ss << "namespace UINT {\n";
+        ss << "auto " << $2 << "() {\n";
+        ss << $6;
+        ss << "}\n";
+        ss << "}\n";
+        $$ = ss.str();
+    }
+    ;
 
 statements
     : %empty
@@ -174,14 +180,29 @@ for_statement
         $$ = "for (" + $3 + " : " + $5 + ") " + $7;
     }
 
-call_expression
-    : expression2 LPAREN RPAREN
+call_parameters
+    : %empty
     {
-        $$ = "" + $1 + "()";
+        $$ = "";
     }
-    | expression2 DOT maybe_templated_function_name LPAREN RPAREN
+    | expression COMMA call_parameters
     {
-        $$ = "(" + $1 + "." + $3 + ")()";
+        $$ = $1 + ", " + $3;
+    }
+    | expression
+    {
+        $$ = $1;
+    }
+    ;
+
+call_expression
+    : expression2 LPAREN call_parameters RPAREN
+    {
+        $$ = "" + $1 + "(" + $3 + ")";
+    }
+    | expression2 DOT maybe_templated_function_name LPAREN call_parameters RPAREN
+    {
+        $$ = "(" + $1 + "." + $3 + ")(" + $5 + ")";
     }
     ;
 
@@ -189,6 +210,10 @@ variable_declaration_left
     : LET IDENTIFIER
     {
         $$ = "const auto&& " + $2;
+    }
+    | LET MUT IDENTIFIER
+    {
+        $$ = "LetMutable auto&& " + $3;
     }
     | REF IDENTIFIER
     {
@@ -261,6 +286,10 @@ expression6
     {
         $$ = "(" + $1 + " + " + $3 + ")";
     }
+    | expression6 MINUS expression5
+    {
+        $$ = "(" + $1 + " - " + $3 + ")";
+    }
     | expression5
     {
         $$ = $1;
@@ -268,6 +297,17 @@ expression6
     ;
 
 expression5
+    : expression5 STAR expression4
+    {
+        $$ = "(" + $1 + " * " + $3 + ")";
+    }
+    | expression4
+    {
+        $$ = $1;
+    }
+    ;
+
+expression4
     : expression2
     {
         $$ = $1;
@@ -310,7 +350,13 @@ expression2
     }
     | IDENTIFIER
     {
-        $$ = $1;
+        assert($1.size() > 0);
+        if ($1.back() == '!')
+            $$ = $1.substr(0, $1.size() - 1) + "_exclamation";
+        else if ($1.back() == '?')
+            $$ = $1.substr(0, $1.size() - 1) + "_question";
+        else
+            $$ = $1;
     }
     ;
 

@@ -1,0 +1,5 @@
+fn main() {
+    let mut c = stdin.read<String>();
+    reverse!(c.begin(), c.end());
+    stdout << c << '\n';
+}

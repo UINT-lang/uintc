@@ -34,7 +34,7 @@ namespace UINTC {
 inline_string_literal    (["]([^"])*["])
 multiline_string_literal (\"\"\"\n([^"]|\"[^"]|\"\"[^"])*\"\"\")
 
-identifier       ([a-zA-Z_][a-zA-Z0-9_]*)
+identifier       ([a-zA-Z_][a-zA-Z0-9_]*)(\?|!)?
 
 char_literal     ('[ -~]')
 i32_literal      ([0-9]+)i32
@@ -50,11 +50,14 @@ i32_literal      ([0-9]+)i32
 "=="    return Parser::token::EQUALS;
 "<<"    return Parser::token::LEFT_SHIFT;
 "+"     return Parser::token::PLUS;
+"-"     return Parser::token::MINUS;
 "."     return Parser::token::DOT;
 "<"     return Parser::token::LESS_THAN;
 ">"     return Parser::token::GREATER_THAN;
 ":"     return Parser::token::COLON;
 "?"     return Parser::token::QUESTION_MARK;
+"*"     return Parser::token::STAR;
+","     return Parser::token::COMMA;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 
@@ -64,6 +67,7 @@ i32_literal      ([0-9]+)i32
 "cpp"   return Parser::token::CPP;
 "fn"    return Parser::token::FN;
 "let"   return Parser::token::LET;
+"mut"   return Parser::token::MUT;
 "for"   return Parser::token::FOR;
 "ref"   return Parser::token::REF;
 

@@ -1,0 +1,4 @@
+fn main() {
+    let c = stdin.read<Char>();
+    stdout << Char(c - 'a' + 'A') << endl;
+}
