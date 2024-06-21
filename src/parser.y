@@ -20,12 +20,18 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE
-%token CPP FN
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUALS LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN
+%token CPP FN LET
+
+%precedence LPAREN
+%left LEFT_SHIFT
+%left PLUS
+%left DOT
 
 %token <std::string> INLINE_STRING
 %token <std::string> MULTILINE_STRING
 %token <std::string> IDENTIFIER
+%token <int32_t> I32_LITERAL
 
 %type <std::string> string
 %type <std::string> cpp_statement
@@ -34,7 +40,10 @@ using namespace std;
 %type <std::string> statement
 %type <std::string> top_levels
 %type <std::string> top_level
-%type <std::string> call_statement
+%type <std::string> call_expression
+%type <std::string> variable_declaration
+%type <std::string> expression
+%type <std::string> maybe_templated_function_name
 
 %code
 {
@@ -117,17 +126,71 @@ statement   : SEMICOLON
             {
                 $$ = $1;
             }
-            | call_statement
+            | expression SEMICOLON
+            {
+                $$ = "    " + $1 + ";\n";
+            }
+            | variable_declaration
             {
                 $$ = $1;
             }
             ;
 
-call_statement  : IDENTIFIER LPAREN RPAREN SEMICOLON
-                {
-                    $$ = "    " + $1 + "();\n";
-                }
-                ;
+call_expression
+    : expression LPAREN RPAREN
+    {
+        $$ = "    " + $1 + "()";
+    }
+    | expression DOT maybe_templated_function_name LPAREN RPAREN
+    {
+        $$ = "(" + $1 + "." + $3 + ")()";
+    }
+    ;
+
+variable_declaration
+    : LET IDENTIFIER EQUALS expression SEMICOLON
+    {
+        $$ = "    const auto&& " + $2 + " = " + $4 + ";\n";
+    }
+    ;
+
+expression
+    : expression LEFT_SHIFT expression
+    {
+        $$ = "(" + $1 + " << " + $3 + ")";
+    }
+    | expression PLUS expression
+    {
+        $$ = "(" + $1 + " + " + $3 + ")";
+    }
+    | call_expression
+    {
+        $$ = $1;
+    }
+    | INLINE_STRING
+    {
+        $$ = $1;
+    }
+    | I32_LITERAL
+    {
+        $$ = to_string($1) + "_i32";
+    }
+    | IDENTIFIER
+    {
+        $$ = $1;
+    }
+    ;
+
+maybe_templated_function_name
+    : IDENTIFIER
+    {
+        $$ = $1;
+    }
+    | IDENTIFIER LESS_THAN expression GREATER_THAN
+    {
+        $$ = $1 + "<" + $3 + ">";
+    }
+    ;
 
 string      : INLINE_STRING
             {
@@ -144,7 +207,7 @@ string      : INLINE_STRING
                 $$ = $1.substr(3, $1.size() - 6);
             }
             ;
- 
+
 %%
 
 namespace UINTC {

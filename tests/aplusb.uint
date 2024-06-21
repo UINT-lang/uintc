@@ -1,0 +1,5 @@
+fn main() {
+    let a = stdin.read<Int32>();
+    let b = stdin.read<Int32>();
+    stdout << a + b << "\n";
+}
