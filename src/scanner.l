@@ -38,6 +38,7 @@ identifier       ([a-zA-Z_][a-zA-Z0-9_]*)(\?|!)?
 
 char_literal     ('[ -~]')
 i32_literal      ([0-9]+)i32
+f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 
 %%
  
@@ -59,6 +60,8 @@ i32_literal      ([0-9]+)i32
 "*"     return Parser::token::STAR;
 ","     return Parser::token::COMMA;
 "/"     return Parser::token::SLASH;
+"+="    return Parser::token::PLUS_EQUAL;
+"%"     return Parser::token::MOD;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 
@@ -71,11 +74,13 @@ i32_literal      ([0-9]+)i32
 "let!"  return Parser::token::LET_MUT;
 "for"   return Parser::token::FOR;
 "ref"   return Parser::token::REF;
+"while" return Parser::token::WHILE;
 
 {inline_string_literal}    yylval->emplace<string>(parseInlineStringLiteral(yytext)); return Parser::token::INLINE_STRING_LITERAL;
 {multiline_string_literal} yylval->emplace<string>(parseMultilineStringLiteral(yytext)); UINTC::currentLineNumber += count(yytext, yytext + strlen(yytext), '\n'); return Parser::token::MULTILINE_STRING_LITERAL;
 {identifier}       yylval->emplace<string>(yytext); return Parser::token::IDENTIFIER;
 {i32_literal}      yylval->emplace<int32_t>(UINTC::parseInt32(yytext)); return Parser::token::I32_LITERAL;
+{f64_literal}      yylval->emplace<double>(stod(yytext)); return Parser::token::F64_LITERAL;
 {char_literal}     yylval->emplace<char>(yytext[1]); return Parser::token::CHAR_LITERAL;
 
 <<EOF>>     return Parser::token::YYEOF;

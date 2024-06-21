@@ -3,14 +3,17 @@ using namespace std;
 
 namespace UINT {
 
-static int32_t operator""_i32(unsigned long long x) {
-    return x;
-}
-
 using Int32 = int32_t;
 using Char = char;
 using String = string;
-using Double = double;
+using Float64 = double;
+
+static Int32 operator""_i32(unsigned long long x) {
+    return x;
+}
+static Float64 operator""_f64(long double x) {
+    return x;
+}
 
 struct StdIn {
     template <typename T>

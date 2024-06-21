@@ -1,7 +1,6 @@
 #!/bin/bash
 
 FILE=$1
-echo "Running $FILE"
 build/uintc $FILE > build/tmp.$FILE.cpp
 if [ $? -ne 0 ]; then
     echo "Failed to compile $FILE"

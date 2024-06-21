@@ -1,0 +1,8 @@
+fn main() {
+    let a = stdin.read<Float64>();
+    let b = stdin.read<Float64>();
+    let c = stdin.read<Float64>();
+    let p = (a + b + c) / 2f64;
+    let s = sqrt(p * (p - a) * (p - b) * (p - c));
+    stdout << fixed << setprecision(1i32) << s << '\n';
+}

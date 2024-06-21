@@ -1,0 +1,8 @@
+fn main() {
+    let s = stdin.read<Int32>();
+    let v = stdin.read<Int32>();
+    let! t = 8i32 * 60i32 - (s + v - 1i32) / v - 10i32;
+    while (t < 0i32)
+        t += 24i32 * 60i32;
+    stdout << setw(2i32) << setfill('0') << t / 60i32 << ':' << setw(2i32) << setfill('0') << t % 60i32 << endl;
+}

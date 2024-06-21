@@ -3,7 +3,7 @@ all: build/uintc
 clean:
 	rm -f build/uintc build/*.cpp build/*.hpp
 
-test:
+test: all
 	tests/run.sh
 
 .PHONY: all clean test

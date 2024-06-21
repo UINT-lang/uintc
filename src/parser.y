@@ -20,8 +20,8 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH
-%token CPP FN LET FOR REF LET_MUT
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD
+%token CPP FN LET FOR REF LET_MUT WHILE
 %token CHAR_LITERAL_NEWLINE
 
 %left EQUALS
@@ -34,6 +34,7 @@ using namespace std;
 %token <std::string> MULTILINE_STRING_LITERAL
 %token <std::string> IDENTIFIER
 %token <int32_t> I32_LITERAL
+%token <double> F64_LITERAL
 %token <char> CHAR_LITERAL
 
 %type <char> char_literal
@@ -55,6 +56,7 @@ using namespace std;
 %type <std::string> expression15
 %type <std::string> expression10
 %type <std::string> expression9
+%type <std::string> expression8
 %type <std::string> expression7
 %type <std::string> expression6
 %type <std::string> expression5
@@ -63,6 +65,7 @@ using namespace std;
 %type <std::string> call_parameters
 %type <std::string> maybe_templated_function_name
 %type <std::string> for_statement
+%type <std::string> while_statement
 
 %code
 {
@@ -154,6 +157,10 @@ statement
     {
         $$ = $1;
     }
+    | while_statement
+    {
+        $$ = $1;
+    }
     ;
 
 statement_or_block
@@ -179,6 +186,14 @@ for_statement
     {
         $$ = "for (" + $3 + " : " + $5 + ") " + $7;
     }
+    ;
+
+while_statement
+    : WHILE LPAREN expression RPAREN statement_or_block
+    {
+        $$ = "while (" + $3 + ") " + $5;
+    }
+    ;
 
 call_parameters
     : %empty
@@ -240,6 +255,10 @@ expression16
     {
         $$ = "(" + $1 + " ? " + $3 + " : " + $5 + ")";
     }
+    | expression15 PLUS_EQUAL expression16
+    {
+        $$ = "(" + $1 + " += " + $3 + ")";
+    }
     | expression15
     {
         $$ = $1;
@@ -264,6 +283,16 @@ expression10
     }
 
 expression9
+    : expression9 LESS_THAN expression8
+    {
+        $$ = "(" + $1 + " < " + $3 + ")";
+    }
+    | expression8
+    {
+        $$ = $1;
+    }
+
+expression8
     : expression7
     {
         $$ = $1;
@@ -305,6 +334,10 @@ expression5
     {
         $$ = "(" + $1 + " / " + $3 + ")";
     }
+    | expression5 MOD expression4
+    {
+        $$ = "(" + $1 + " % " + $3 + ")";
+    }
     | expression4
     {
         $$ = $1;
@@ -345,6 +378,10 @@ expression2
     | I32_LITERAL
     {
         $$ = to_string($1) + "_i32";
+    }
+    | F64_LITERAL
+    {
+        $$ = to_string($1) + "_f64";
     }
     | char_literal
     {

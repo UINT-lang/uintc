@@ -1,0 +1,5 @@
+fn main() {
+    let a = stdin.read<Int32>();
+    let b = stdin.read<Int32>();
+    stdout << (a * 10i32 + b) / 19i32 << "\n";
+}

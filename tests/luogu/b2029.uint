@@ -1,0 +1,5 @@
+fn main() {
+    let h = stdin.read<Int32>();
+    let r = stdin.read<Int32>();
+    stdout << Int32(20000f64 / (r * r * h * 3.14f64)) + 1i32 << endl;
+}
