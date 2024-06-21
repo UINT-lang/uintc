@@ -20,11 +20,12 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUALS LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN
-%token CPP FN LET
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK
+%token CPP FN LET FOR REF
 %token CHAR_LITERAL_NEWLINE
 
-%precedence LPAREN
+%left EQUALS
+%right QUESTION_MARK
 %left LEFT_SHIFT
 %left PLUS
 %left DOT
@@ -33,6 +34,7 @@ using namespace std;
 %token <std::string> MULTILINE_STRING_LITERAL
 %token <std::string> IDENTIFIER
 %token <int32_t> I32_LITERAL
+%token <char> CHAR_LITERAL
 
 %type <char> char_literal
 
@@ -41,12 +43,24 @@ using namespace std;
 %type <std::string> fn_declaration
 %type <std::string> statements
 %type <std::string> statement
+%type <std::string> statement_or_block
+%type <std::string> block
 %type <std::string> top_levels
 %type <std::string> top_level
 %type <std::string> call_expression
 %type <std::string> variable_declaration
+%type <std::string> variable_declaration_left
 %type <std::string> expression
+%type <std::string> expression16
+%type <std::string> expression15
+%type <std::string> expression10
+%type <std::string> expression9
+%type <std::string> expression7
+%type <std::string> expression6
+%type <std::string> expression5
+%type <std::string> expression2
 %type <std::string> maybe_templated_function_name
+%type <std::string> for_statement
 
 %code
 {
@@ -102,64 +116,172 @@ fn_declaration  : FN IDENTIFIER LPAREN RPAREN LBRACE statements RBRACE
                 }
                 ;
 
-statements  : %empty
-            {
-                $$ = "";
-            }
-            | statements statement
-            {
-                $$ = $1 + $2;
-            }
-            ;
+statements
+    : %empty
+    {
+        $$ = "";
+    }
+    | statements statement
+    {
+        $$ = $1 + $2;
+    }
+    ;
 
-statement   : SEMICOLON
-            {
-                $$ = "";
-            }
-            | cpp_statement
-            {
-                $$ = $1;
-            }
-            | expression SEMICOLON
-            {
-                $$ = "" + $1 + ";\n";
-            }
-            | variable_declaration
-            {
-                $$ = $1;
-            }
-            ;
+statement
+    : SEMICOLON
+    {
+        $$ = "";
+    }
+    | cpp_statement
+    {
+        $$ = $1;
+    }
+    | expression SEMICOLON
+    {
+        $$ = "" + $1 + ";\n";
+    }
+    | variable_declaration
+    {
+        $$ = $1;
+    }
+    | for_statement
+    {
+        $$ = $1;
+    }
+    ;
+
+statement_or_block
+    : statement
+    {
+        $$ = $1;
+    }
+    | block
+    {
+        $$ = $1;
+    }
+    ;
+
+block
+    : LBRACE statements RBRACE
+    {
+        $$ = "{\n" + $2 + "}\n";
+    }
+    ;
+
+for_statement
+    : FOR LPAREN variable_declaration_left COLON expression RPAREN statement_or_block
+    {
+        $$ = "for (" + $3 + " : " + $5 + ") " + $7;
+    }
 
 call_expression
-    : expression LPAREN RPAREN
+    : expression2 LPAREN RPAREN
     {
         $$ = "" + $1 + "()";
     }
-    | expression DOT maybe_templated_function_name LPAREN RPAREN
+    | expression2 DOT maybe_templated_function_name LPAREN RPAREN
     {
         $$ = "(" + $1 + "." + $3 + ")()";
     }
     ;
 
-variable_declaration
-    : LET IDENTIFIER EQUALS expression SEMICOLON
+variable_declaration_left
+    : LET IDENTIFIER
     {
-        $$ = "const auto&& " + $2 + " = " + $4 + ";\n";
+        $$ = "const auto&& " + $2;
+    }
+    | REF IDENTIFIER
+    {
+        $$ = "const auto& " + $2;
+    }
+    ;
+
+variable_declaration
+    : variable_declaration_left EQUAL expression SEMICOLON
+    {
+        $$ = $1 + " = " + $3 + ";\n";
     }
     ;
 
 expression
-    : expression LEFT_SHIFT expression
+    : expression16
+    {
+        $$ = $1;
+    }
+    ;
+
+expression16
+    : expression15 QUESTION_MARK expression15 COLON expression15
+    {
+        $$ = "(" + $1 + " ? " + $3 + " : " + $5 + ")";
+    }
+    | expression15
+    {
+        $$ = $1;
+    }
+    ;
+
+expression15
+    : expression10
+    {
+        $$ = $1;
+    }
+    ;
+
+expression10
+    : expression10 EQUALS expression9
+    {
+        $$ = "(" + $1 + " == " + $3 + ")";
+    }
+    | expression9
+    {
+        $$ = $1;
+    }
+
+expression9
+    : expression7
+    {
+        $$ = $1;
+    }
+    ;
+
+expression7
+    : expression7 LEFT_SHIFT expression6
     {
         $$ = "(" + $1 + " << " + $3 + ")";
     }
-    | expression PLUS expression
+    | expression6
+    {
+        $$ = $1;
+    }
+    ;
+
+expression6
+    : expression6 PLUS expression5
     {
         $$ = "(" + $1 + " + " + $3 + ")";
     }
-    | call_expression
+    | expression5
     {
         $$ = $1;
+    }
+    ;
+
+expression5
+    : expression2
+    {
+        $$ = $1;
+    }
+    ;
+
+expression2
+    : call_expression
+    {
+        $$ = $1;
+    }
+    | LPAREN expression RPAREN
+    {
+        $$ = "(" + $2 + ")";
     }
     | string_literal
     {
@@ -170,7 +292,11 @@ expression
             else
                 $$ += c;
         }
-        $$ += "\"";
+        $$ += "\"s";
+    }
+    | CHAR_LITERAL
+    {
+        $$ = "'" + string(1, $1) + "'";
     }
     | I32_LITERAL
     {
