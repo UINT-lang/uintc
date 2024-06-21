@@ -1,0 +1,4 @@
+fn main() {
+    let x = stdin.read<Int32>();
+    stdout << "Today, I ate " << x << " " << (x <= 1i32 ? "apple" : "apples") << ".\n";
+}

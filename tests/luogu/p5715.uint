@@ -1,0 +1,5 @@
+fn main() {
+    let! a = Array { stdin.read<Int32>(), stdin.read<Int32>(), stdin.read<Int32>() };
+    sort!(a.begin(), a.end());
+    stdout << a[0i32] << ' ' << a[1i32] << ' ' << a[2i32] << '\n';
+}

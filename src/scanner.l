@@ -65,6 +65,8 @@ f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 "&&"    return Parser::token::LOGICAL_AND;
 ">="    return Parser::token::GREATER_EQUAL;
 "<="    return Parser::token::LESS_EQUAL;
+"["     return Parser::token::LBRACKET;
+"]"     return Parser::token::RBRACKET;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 
@@ -78,6 +80,8 @@ f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 "for"   return Parser::token::FOR;
 "ref"   return Parser::token::REF;
 "while" return Parser::token::WHILE;
+"if"    return Parser::token::IF;
+"else"  return Parser::token::ELSE;
 
 {inline_string_literal}    yylval->emplace<string>(parseInlineStringLiteral(yytext)); return Parser::token::INLINE_STRING_LITERAL;
 {multiline_string_literal} yylval->emplace<string>(parseMultilineStringLiteral(yytext)); UINTC::currentLineNumber += count(yytext, yytext + strlen(yytext), '\n'); return Parser::token::MULTILINE_STRING_LITERAL;

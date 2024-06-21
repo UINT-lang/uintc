@@ -20,9 +20,12 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL
-%token CPP FN LET FOR REF LET_MUT WHILE
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL LBRACKET RBRACKET
+%token CPP FN LET FOR REF LET_MUT WHILE IF ELSE
 %token CHAR_LITERAL_NEWLINE
+
+%precedence RPAREN
+%precedence ELSE
 
 %left EQUALS
 %right QUESTION_MARK
@@ -68,6 +71,7 @@ using namespace std;
 %type <std::string> maybe_templated_function_name
 %type <std::string> for_statement
 %type <std::string> while_statement
+%type <std::string> if_statement
 
 %code
 {
@@ -163,6 +167,10 @@ statement
     {
         $$ = $1;
     }
+    | if_statement
+    {
+        $$ = $1;
+    }
     ;
 
 statement_or_block
@@ -197,6 +205,17 @@ while_statement
     }
     ;
 
+if_statement
+    : IF LPAREN expression RPAREN statement_or_block
+    {
+        $$ = "if (" + $3 + ") " + $5;
+    }
+    | IF LPAREN expression RPAREN statement_or_block ELSE statement_or_block
+    {
+        $$ = "if (" + $3 + ") " + $5 + " else " + $7;
+    }
+    ;
+
 call_parameters
     : %empty
     {
@@ -220,6 +239,10 @@ call_expression
     | expression2 DOT maybe_templated_function_name LPAREN call_parameters RPAREN
     {
         $$ = "(" + $1 + "." + $3 + ")(" + $5 + ")";
+    }
+    | IDENTIFIER LBRACE call_parameters RBRACE
+    {
+        $$ = $1 + "{" + $3 + "}";
     }
     ;
 
@@ -387,6 +410,10 @@ expression2
     : call_expression
     {
         $$ = $1;
+    }
+    | expression2 LBRACKET expression RBRACKET
+    {
+        $$ = $1 + "[" + $3 + "]";
     }
     | LPAREN expression RPAREN
     {

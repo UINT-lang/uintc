@@ -1,0 +1,12 @@
+fn main() {
+    let m = stdin.read<Float64>();
+    let h = stdin.read<Float64>();
+    let bmi = m / (h * h);
+    if (bmi < 18.5f64)
+        stdout << "Underweight\n";
+    else if (bmi < 24f64)
+        stdout << "Normal\n";
+    else {
+        stdout << bmi << "\nOverweight\n";
+    }
+}

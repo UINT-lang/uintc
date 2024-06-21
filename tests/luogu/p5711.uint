@@ -1,0 +1,4 @@
+fn main() {
+    let n = stdin.read<Int32>();
+    stdout << (n % (n % 100i32 ? 4i32 : 400i32) == 0i32) << '\n';
+}

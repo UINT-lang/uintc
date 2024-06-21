@@ -36,4 +36,12 @@ decltype(auto) reverse_exclamation(Args&&... args) {
     return std::reverse(forward<Args>(args)...);
 };
 
+template <typename T, size_t N>
+using Array = array<T, N>;
+
+template <typename... Args>
+decltype(auto) sort_exclamation(Args&&... args) {
+    return std::sort(forward<Args>(args)...);
+};
+
 }  // namespace UINT
