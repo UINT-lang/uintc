@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FILE=$1
-build/uintc $FILE > build/tmp.$FILE.cpp
+build/uintc < $FILE > build/tmp.$FILE.cpp
 if [ $? -ne 0 ]; then
     echo "Failed to compile $FILE"
     exit 1

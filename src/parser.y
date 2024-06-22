@@ -4,7 +4,7 @@
 using namespace std;
 %}
  
-%require "3.7.4"
+%require "3.8"
 %language "C++"
 
 %define api.parser.class {Parser}
@@ -20,7 +20,7 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL LBRACKET RBRACKET
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL LBRACKET RBRACKET PIPE DOUBLE_ARROW
 %token CPP FN LET FOR REF LET_MUT WHILE IF ELSE
 %token CHAR_LITERAL_NEWLINE
 
@@ -51,7 +51,6 @@ using namespace std;
 %type <std::string> block
 %type <std::string> top_levels
 %type <std::string> top_level
-%type <std::string> call_expression
 %type <std::string> variable_declaration
 %type <std::string> variable_declaration_left
 %type <std::string> expression
@@ -59,6 +58,7 @@ using namespace std;
 %type <std::string> expression15
 %type <std::string> expression14
 %type <std::string> expression13
+%type <std::string> expression12
 %type <std::string> expression10
 %type <std::string> expression9
 %type <std::string> expression8
@@ -72,6 +72,8 @@ using namespace std;
 %type <std::string> for_statement
 %type <std::string> while_statement
 %type <std::string> if_statement
+%type <std::string> lambda
+%type <std::string> variable_declaration_lefts
 
 %code
 {
@@ -231,21 +233,6 @@ call_parameters
     }
     ;
 
-call_expression
-    : expression2 LPAREN call_parameters RPAREN
-    {
-        $$ = "" + $1 + "(" + $3 + ")";
-    }
-    | expression2 DOT maybe_templated_function_name LPAREN call_parameters RPAREN
-    {
-        $$ = "(" + $1 + "." + $3 + ")(" + $5 + ")";
-    }
-    | IDENTIFIER LBRACE call_parameters RBRACE
-    {
-        $$ = $1 + "{" + $3 + "}";
-    }
-    ;
-
 variable_declaration_left
     : LET IDENTIFIER
     {
@@ -268,8 +255,27 @@ variable_declaration
     }
     ;
 
+variable_declaration_lefts
+    : %empty
+    {
+        $$ = "";
+    }
+    | variable_declaration_left COMMA variable_declaration_lefts
+    {
+        $$ = $1 + ", " + $3;
+    }
+    | variable_declaration_left
+    {
+        $$ = $1;
+    }
+    ;
+
 expression
     : expression16
+    {
+        $$ = $1;
+    }
+    | lambda
     {
         $$ = $1;
     }
@@ -309,6 +315,17 @@ expression14
     ;
 
 expression13
+    : expression13 PIPE expression12
+    {
+        $$ = "(" + $1 + " | " + $3 + ")";
+    }
+    | expression12
+    {
+        $$ = $1;
+    }
+    ;
+
+expression12
     : expression10
     {
         $$ = $1;
@@ -406,10 +423,37 @@ expression4
     }
     ;
 
-expression2
-    : call_expression
+lambda
+    : LPAREN variable_declaration_lefts RPAREN DOUBLE_ARROW expression
     {
-        $$ = $1;
+        $$ = "[&](" + $2 + ") { return " + $5 + "; }";
+    }
+    | LPAREN variable_declaration_lefts RPAREN DOUBLE_ARROW block
+    {
+        $$ = "[&](" + $2 + ") " + $5;
+    }
+    | DOUBLE_ARROW expression
+    {
+        $$ = "[&]() { return " + $2 + "; }";
+    }
+    | DOUBLE_ARROW block
+    {
+        $$ = "[&]() " + $2;
+    }
+    ;
+
+expression2
+    : expression2 LPAREN call_parameters RPAREN
+    {
+        $$ = "" + $1 + "(" + $3 + ")";
+    }
+    | expression2 DOT maybe_templated_function_name LPAREN call_parameters RPAREN
+    {
+        $$ = "(" + $1 + "." + $3 + ")(" + $5 + ")";
+    }
+    | expression2 LBRACE call_parameters RBRACE
+    {
+        $$ = $1 + "{" + $3 + "}";
     }
     | expression2 LBRACKET expression RBRACKET
     {
