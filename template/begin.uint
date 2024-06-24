@@ -1,0 +1,12 @@
+fn reverse! = fwd std::reverse;
+fn sort! = fwd std::sort;
+
+fn min = fwd std::min;
+fn max = fwd std::max;
+
+fn fixed = fwd std::fixed;
+fn setprecision = fwd std::setprecision;
+fn setw = fwd std::setw;
+fn setfill = fwd std::setfill;
+
+ref! stdout = std::cout;

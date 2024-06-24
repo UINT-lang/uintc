@@ -25,32 +25,17 @@ struct StdIn {
 
 static StdIn stdin;
 
-static auto& stdout = std::cout;
-
-using std::fixed;
-using std::setprecision;
 using std::endl;
-using std::setw;
-using std::setfill;
-using std::min;
-using std::max;
 using std::operator""s;
 
 template <typename T>
 concept LetMutable = !std::is_const_v<T> && !std::is_lvalue_reference_v<T>;
 
-template <typename... Args>
-decltype(auto) reverse_exclamation(Args&&... args) {
-    return std::reverse(std::forward<Args>(args)...);
-};
+template <typename T>
+concept RefMutable = !std::is_const_v<T>;
 
 template <typename T, size_t N>
 using Array = std::array<T, N>;
-
-template <typename... Args>
-static decltype(auto) sort_exclamation(Args&&... args) {
-    return std::sort(std::forward<Args>(args)...);
-};
 
 template <typename T>
 static auto range(const T& n) {

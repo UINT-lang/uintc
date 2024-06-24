@@ -69,6 +69,7 @@ f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 "]"     return Parser::token::RBRACKET;
 "|"     return Parser::token::PIPE;
 "=>"    return Parser::token::DOUBLE_ARROW;
+"::"    return Parser::token::DOUBLE_COLON;
 
 "'\\n'" return Parser::token::CHAR_LITERAL_NEWLINE;
 
@@ -81,9 +82,11 @@ f64_literal      ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?)f64
 "let!"  return Parser::token::LET_MUT;
 "for"   return Parser::token::FOR;
 "ref"   return Parser::token::REF;
+"ref!"  return Parser::token::REF_MUT;
 "while" return Parser::token::WHILE;
 "if"    return Parser::token::IF;
 "else"  return Parser::token::ELSE;
+"fwd"   return Parser::token::FWD;
 
 {inline_string_literal}    yylval->emplace<string>(parseInlineStringLiteral(yytext)); return Parser::token::INLINE_STRING_LITERAL;
 {multiline_string_literal} yylval->emplace<string>(parseMultilineStringLiteral(yytext)); UINTC::currentLineNumber += count(yytext, yytext + strlen(yytext), '\n'); return Parser::token::MULTILINE_STRING_LITERAL;
@@ -113,6 +116,8 @@ int main() {
     while (cin.get(c))
         allInput += c;
     allInput += end_uint;
+
+    UINTC::currentLineNumber -= count(begin_uint.begin(), begin_uint.end(), '\n');
     
     yyscan_t scanner;
     yylex_init(&scanner);

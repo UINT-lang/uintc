@@ -20,8 +20,8 @@ using namespace std;
     YY_DECL;
 }
  
-%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL LBRACKET RBRACKET PIPE DOUBLE_ARROW
-%token CPP FN LET FOR REF LET_MUT WHILE IF ELSE
+%token LPAREN RPAREN SEMICOLON LBRACE RBRACE EQUAL LEFT_SHIFT PLUS DOT LESS_THAN GREATER_THAN COLON EQUALS QUESTION_MARK STAR COMMA MINUS SLASH PLUS_EQUAL MOD LOGICAL_AND GREATER_EQUAL LESS_EQUAL LBRACKET RBRACKET PIPE DOUBLE_ARROW DOUBLE_COLON
+%token CPP FN LET FOR REF LET_MUT WHILE IF ELSE FWD REF_MUT
 %token CHAR_LITERAL_NEWLINE
 
 %precedence RPAREN
@@ -42,6 +42,7 @@ using namespace std;
 
 %type <char> char_literal
 
+%type <std::string> identifier
 %type <std::string> string_literal
 %type <std::string> cpp_statement
 %type <std::string> fn_declaration
@@ -111,6 +112,10 @@ top_level
     {
         $$ = $1;
     }
+    | variable_declaration
+    {
+        $$ = "namespace UINT { static " + $1 + " }\n";
+    }
     ;
 
 cpp_statement
@@ -121,14 +126,20 @@ cpp_statement
     ;
 
 fn_declaration
-    : FN IDENTIFIER LPAREN RPAREN LBRACE statements RBRACE
+    : FN identifier LPAREN RPAREN LBRACE statements RBRACE
     {
         stringstream ss;
         ss << "namespace UINT {\n";
-        ss << "auto " << $2 << "() {\n";
+        ss << "static auto " << $2 << "() {\n";
         ss << $6;
         ss << "}\n";
         ss << "}\n";
+        $$ = ss.str();
+    }
+    | FN identifier EQUAL FWD expression SEMICOLON
+    {
+        stringstream ss;
+        ss << "namespace UINT { template <typename... Args> static decltype(auto) " << $2 << "(Args&&... args) { return " << $5 << "(std::forward<Args>(args)...); } }\n";
         $$ = ss.str();
     }
     ;
@@ -234,17 +245,21 @@ call_parameters
     ;
 
 variable_declaration_left
-    : LET IDENTIFIER
+    : LET identifier
     {
         $$ = "const auto&& " + $2;
     }
-    | LET_MUT IDENTIFIER
+    | LET_MUT identifier
     {
         $$ = "LetMutable auto&& " + $2;
     }
-    | REF IDENTIFIER
+    | REF identifier
     {
         $$ = "const auto& " + $2;
+    }
+    | REF_MUT identifier
+    {
+        $$ = "RefMutable auto& " + $2;
     }
     ;
 
@@ -459,6 +474,10 @@ expression2
     {
         $$ = $1 + "[" + $3 + "]";
     }
+    | expression2 DOUBLE_COLON identifier
+    {
+        $$ = $1 + "::" + $3;
+    }
     | LPAREN expression RPAREN
     {
         $$ = "(" + $2 + ")";
@@ -492,7 +511,14 @@ expression2
         stream << "'\\x" << std::setfill('0') << std::setw(2) << std::hex << (int) (unsigned char) $1 << "'";
         $$ = stream.str();
     }
-    | IDENTIFIER
+    | identifier
+    {
+        $$ = $1;
+    }
+    ;
+
+identifier:
+    IDENTIFIER
     {
         assert($1.size() > 0);
         if ($1.back() == '!')
@@ -505,11 +531,11 @@ expression2
     ;
 
 maybe_templated_function_name
-    : IDENTIFIER
+    : identifier
     {
         $$ = $1;
     }
-    | IDENTIFIER LESS_THAN IDENTIFIER GREATER_THAN
+    | identifier LESS_THAN identifier GREATER_THAN
     {
         $$ = $1 + "<" + $3 + ">";
     }
